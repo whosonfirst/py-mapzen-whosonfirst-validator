@@ -9,7 +9,7 @@ setup(
     name='mapzen.whosonfirst.validator',
     namespace_packages=['mapzen', 'mapzen.whosonfirst', 'mapzen.whosonfirst.validator'],
     version='0.01',
-    description='Simple Python wrapper for Who\'s On First helper functions',
+    description='Tools for validating Who\'s On First documents',
     author='Mapzen',
     url='https://github.com/mapzen/py-mapzen-whosonfirst-validator',
     install_requires=[
