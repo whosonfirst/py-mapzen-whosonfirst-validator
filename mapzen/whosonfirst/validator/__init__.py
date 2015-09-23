@@ -193,12 +193,12 @@ class validator:
                 
             elif k == 'edtf:inception':
                 r.info("assigning empty inception date")
-                props['edtf:inception'] = "u"
+                props['edtf:inception'] = u"u"
                 updated = True
                 
             elif k == 'edtf:cessation':
                 r.info("assigning empty cessation date")
-                props['edtf:cessation'] = "u"
+                props['edtf:cessation'] = u"u"
                 updated = True
                 
             else:
