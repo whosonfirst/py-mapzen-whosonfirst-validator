@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*-python-*-
+
+import sys
+import os.path
+import logging
+
+import mapzen.whosonfirst.validator
+
+if __name__ == '__main__': 
+
+    import optparse
+
+    opt_parser = optparse.OptionParser("""wof-validate --options /path/to/wof-data""")
+
+    opt_parser.add_option('--update', dest='update', action='store_true', default=False, help='Try to fix errant values (default is False)')
+    opt_parser.add_option('--derive', dest='derive', action='store_true', default=False, help='Try to derive missing values (default is False)')
+
+    opt_parser.add_option('--multi', dest='multi', action='store_true', default=False, help='Validate files with multiple processes (default is False)')
+    opt_parser.add_option('--single', dest='single', action='store_true', default=False, help='Validate one or more individual files (default is False)')
+
+    opt_parser.add_option('--verbose', dest='verbose', action='store_true', default=False, help='Be chatty (default is false)')
+
+    options, args = opt_parser.parse_args()
+
+    if options.verbose:	
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    v = mapzen.whosonfirst.validator.validator()
+
+    # TODO: PLEASE ADD THIS
+    # exporter = mapzen.whosonfirst.export.flatfile(source)
+
+    # note the scope so that we keep a pointer to
+    # v and exporter (20150922/thisisaaronland)
+
+    def do_validate(path):
+        path = os.path.abspath(path)
+        report = v.validate_file(path)
+
+        if report.ok():
+            logging.info("%s is OKAY in as much as any of us are really okay..." % path)
+        else:
+            logging.error("%s FAILED validation" % path)
+
+    # TO DO: MULTIPROCESSING
+
+    if options.single:
+
+        for path in args:
+            do_validate(path)
+
+        sys.exit()
+
+    for source in args:
+
+        source = os.path.abspath(source)
+        crawl = mapzen.whosonfirst.utils.crawl(source)
+
+        for path in crawl:
+            do_validate(path)
+
+    sys.exit()

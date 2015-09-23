@@ -16,53 +16,60 @@ class reporter:
 
     def __init__(self):
 
-        self.debug = []
-        self.info = []
-        self.warning = []
-        self.error = []
+        self._debug_ = []
+        self._info_ = []
+        self._warning_ = []
+        self._error_ = []
 
     def __repr__(self):
-        return self.ok()
+        return str(self.ok())
 
-    def __str__(self):
-        return self.ok()
+    def report(self):
+
+        return {
+            'debug': self._debug_,
+            'info': self._info_,
+            'warning': self._warning_,
+            'error': self._error_,
+            'ok': self.ok()
+        }
 
     def ok(self, strict=False):
 
         ok = True
 
         if strict:
-            if len(self.warning):
+            if len(self._warning_):
                 ok = False
         else:
-            if len(self.error):
+            if len(self._error_):
                 ok = False
 
         return ok
 
     def debug(self, msg):
-        self.debug.append(msg)
+        self._debug_.append(msg)
         logging.debug(msg)
 
     def info(self, msg):
-        self.info.append(msg)
+        self._info_.append(msg)
         logging.info(msg)
 
     def warning(self, msg):
-        self.warning.append(msg)
+        self._warning_.append(msg)
         logging.warning(msg)
 
     def error(self, msg):
-        self.error.append(msg)`
+        self._error_.append(msg)
         logging.error(msg)
 
 class validator:
 
     def __init__(self, **kwargs):
 
-        self.do_update = kwargs('update', False)
-        self.do_export = kwargs('export', False)
-        self.do_derive = kwargs('derive', False)
+        self.do_update = kwargs.get('update', False)
+        self.do_export = kwargs.get('export', False)
+        self.do_derive = kwargs.get('derive', False)
 
     def validate_file(self, path):
     
@@ -82,6 +89,8 @@ class validator:
     def validate_feature(self, feature):
 
         r = reporter()
+
+        updated = False
 
         isa = feature.get('type', None)
 
@@ -130,10 +139,10 @@ class validator:
             # r.info("look for %s" % k)
             
             if props.has_key(k):
-                r.debug("%s has key (%s)" % (path, k))
+                r.debug("%s has key (%s)" % ("feature", k))
                 continue
             
-            r.warning("%s is missing key %s" % (path, k))
+            r.warning("%s is missing key %s" % ("feature", k))
 
             updated = False
 
@@ -207,10 +216,10 @@ class validator:
             isa = type(v)
         
             if isa == expected:
-                r.debug("%s has key (%s) with expected value (%s)" % (path, k, isa))
+                r.debug("%s has key (%s) with expected value (%s)" % ("feature", k, isa))
                 continue
             
-            r.warning("%s has incorrect value for %s, expected %s but got %s (%s)" % (path, k, expected, isa, v))
+            r.warning("%s has incorrect value for %s, expected %s but got %s (%s)" % ("feature", k, expected, isa, v))
 
             updated = False
 
@@ -296,14 +305,14 @@ class validator:
             count_hiers = len(hier)
             
             if count_hiers == 0:
-                r.warning("%s has a zero length hierarchy but unable to figure it out" % path)
+                r.warning("%s has a zero length hierarchy but unable to figure it out" % "feature")
             else:
-                r.info("%s had a zero length hierarchy and now it doesn't" % path)
+                r.info("%s had a zero length hierarchy and now it doesn't" % "feature")
                 props['wof:hierarchy'] = hier
                 updated = True
 
         if not props.get('src:geom', False) and props.get('geom:source', False):
-            r.info("%s has missing 'src:geom' that can be derived by 'geom:source'" % path)
+            r.info("%s has missing 'src:geom' that can be derived by 'geom:source'" % "feature")
             props['src:geom'] = props['geom:source']
             del(props['geom:source'])
             updated = True
@@ -335,15 +344,15 @@ class validator:
                         break
                 
                 if new_parent_id and new_parent_id != -1:
-                    r.info("%s has -1 parent id and setting to %s" % (path, new_parent_id))
+                    r.info("%s has -1 parent id and setting to %s" % ("feature", new_parent_id))
                     props['wof:parent_id'] = new_parent_id
                     updated = True
 
                 else:
-                    r.warning("%s has no parent and a single hierarchy but unable to figure it out..." % path)
+                    r.warning("%s has no parent and a single hierarchy but unable to figure it out..." % "feature")
                 
             elif count_hiers:
-                r.info("%s has multiple hiers so no easy way to determine parent" % path)
+                r.info("%s has multiple hiers so no easy way to determine parent" % "feature")
             else:
                 pass
 
@@ -352,7 +361,7 @@ class validator:
         name = props.get("wof:name", "")
         
         if len(name) == 0:
-            r.debug("%s has a zero-length name" % path)
+            r.debug("%s has a zero-length name" % "feature")
             
         # check ISO country
 
@@ -364,7 +373,7 @@ class validator:
         # update the record?
 
         if updated and self.do_export:
-            r.info("%s has changes that will be written to disk" % path)
+            r.info("%s has changes that will be written to disk" % "feature")
             feature['properties'] = props
             # exporter.export_feature(feature)
     
