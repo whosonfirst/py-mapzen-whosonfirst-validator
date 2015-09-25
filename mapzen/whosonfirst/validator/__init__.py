@@ -77,7 +77,7 @@ class reporter:
 
     def warning(self, msg):
         self._warning_.append(msg)
-        logging.warning(msg)
+        logging.debug(msg)
 
     def error(self, msg):
         self._error_.append(msg)
@@ -87,10 +87,10 @@ class validator:
 
     def __init__(self, **kwargs):
 
-        self.do_update = kwargs.get('update', False)
         self.do_derive = kwargs.get('derive', False)
-
         self.exporter = kwargs.get('exporter', None)
+
+        self._path_ = "feature"
 
         self._required_ = {
             'wof:id': types.IntType,
@@ -138,6 +138,7 @@ class validator:
 
     def validate_file(self, path):
     
+        self._path_ = path
         logging.debug("process %s" % path)
 
         try:
@@ -180,10 +181,10 @@ class validator:
             # r.info("look for %s" % k)
             
             if props.has_key(k):
-                r.debug("%s has key (%s)" % ("feature", k))
+                r.debug("%s has key (%s)" % (self._path_, k))
                 continue
             
-            r.warning("%s is missing key %s" % ("feature", k))
+            r.warning("%s is missing key %s" % (self._path_, k))
 
             default = self.default_value(k)
 
@@ -200,10 +201,10 @@ class validator:
             isa = type(v)
         
             if isa == expected:
-                r.debug("%s has key (%s) with expected value (%s)" % ("feature", k, isa))
+                r.debug("%s has key (%s) with expected value (%s)" % (self._path_, k, isa))
                 continue
             
-            r.warning("%s has incorrect value for %s, expected %s but got %s (%s)" % ("feature", k, expected, isa, v))
+            r.warning("%s has incorrect value for %s, expected %s but got %s (%s)" % (self._path_, k, expected, isa, v))
 
             if k == 'wof:hierarchy':
                 
@@ -281,14 +282,14 @@ class validator:
                 count_hiers = len(hier)
             
                 if count_hiers == 0:
-                    r.warning("%s has a zero length hierarchy but unable to figure it out" % "feature")
+                    r.warning("%s has a zero length hierarchy but unable to figure it out" % self._path_)
                 else:
-                    r.info("%s had a zero length hierarchy and now it doesn't" % "feature")
+                    r.info("%s had a zero length hierarchy and now it doesn't" % self._path_)
                     props['wof:hierarchy'] = hier
                     updated = True
 
             if not props.get('src:geom', False) and props.get('geom:source', False):
-                r.info("%s has missing 'src:geom' that can be derived by 'geom:source'" % "feature")
+                r.info("%s has missing 'src:geom' that can be derived by 'geom:source'" % self._path_)
                 props['src:geom'] = props['geom:source']
                 del(props['geom:source'])
                 updated = True
@@ -320,15 +321,15 @@ class validator:
                             break
                 
                         if new_parent_id and new_parent_id != -1:
-                            r.info("%s has -1 parent id and setting to %s" % ("feature", new_parent_id))
+                            r.info("%s has -1 parent id and setting to %s" % (self._path_, new_parent_id))
                             props['wof:parent_id'] = new_parent_id
                             updated = True
 
                         else:
-                            r.warning("%s has no parent and a single hierarchy but unable to figure it out..." % "feature")
+                            r.warning("%s has no parent and a single hierarchy but unable to figure it out..." % self._path_)
                 
                 elif count_hiers:
-                    r.info("%s has multiple hiers so no easy way to determine parent" % "feature")
+                    r.info("%s has multiple hiers so no easy way to determine parent" % self._path_)
                 else:
                     pass
         
@@ -339,24 +340,24 @@ class validator:
         name = props.get("wof:name", "")
         
         if len(name) == 0:
-            r.warning("%s has a zero-length name" % "feature")
+            r.warning("%s has a zero-length name" % self._path_)
             
         # check ISO country
 
         iso = props.get("iso:country", "")
         
         if len(iso) != 2:
-            r.warning("%s has a weird ISO" % path)
+            r.warning("%s has a weird ISO" % self._path_)
 
         if updated:
             
             if self.exporter:
 
-                r.info("%s has changes that will be written to disk" % "feature")
+                r.info("%s has changes that will be written to disk" % self._path_)
                 feature['properties'] = props
                 self.exporter.export_feature(feature)
             else:
-                r.debug("%s has changed but no exporter has been defined so updates will not apply" % "feature")
+                r.debug("%s has changed but no exporter has been defined so updates will not apply" % self._path_)
     
         return r
 

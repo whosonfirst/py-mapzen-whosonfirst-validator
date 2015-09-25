@@ -2,6 +2,8 @@
 # -*-python-*-
 
 import sys
+import signal
+import multiprocessing
 import os.path
 import logging
 
@@ -13,11 +15,11 @@ if __name__ == '__main__':
 
     opt_parser = optparse.OptionParser("""wof-validate --options /path/to/wof-data""")
 
-    opt_parser.add_option('--update', dest='update', action='store_true', default=False, help='Try to fix errant values (default is False)')
-    opt_parser.add_option('--derive', dest='derive', action='store_true', default=False, help='Try to derive missing values (default is False)')
+    opt_parser.add_option('--update', dest='update', action='store_true', default=False, help='Rewrite files that have been updated (default is False)')
+    opt_parser.add_option('--source', dest='source', action='store', default=None, help='Where to rewrite updated files to (default is None)')
 
+    opt_parser.add_option('--derive', dest='derive', action='store_true', default=False, help='Try to derive missing values (default is False)')
     opt_parser.add_option('--multi', dest='multi', action='store_true', default=False, help='Validate files with multiple processes (default is False)')
-    opt_parser.add_option('--single', dest='single', action='store_true', default=False, help='Validate one or more individual files (default is False)')
 
     opt_parser.add_option('--verbose', dest='verbose', action='store_true', default=False, help='Be chatty (default is false)')
 
@@ -28,38 +30,82 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(level=logging.INFO)
 
-    v = mapzen.whosonfirst.validator.validator()
+    vld_args = {
+        'derive': options.derive
+    }
 
-    # TODO: PLEASE ADD THIS
-    # exporter = mapzen.whosonfirst.export.flatfile(source)
+    if options.update:
+
+        if not options.source:
+            logging.error("Update flag is set with an export source")
+            sys.exit()
+
+        source = os.path.abspath(source)
+        exporter = mapzen.whosonfirst.export.flatfile(source)
+
+        vld_args['exporter'] = exporter
+
+    vld = mapzen.whosonfirst.validator.validator(**vld_args)
 
     # note the scope so that we keep a pointer to
-    # v and exporter (20150922/thisisaaronland)
+    # vld and exporter (20150922/thisisaaronland)
 
     def do_validate(path):
-        path = os.path.abspath(path)
-        report = v.validate_file(path)
 
-        if report.ok():
-            logging.info("%s is OKAY in as much as any of us are really okay..." % path)
+        rptr = vld.validate_file(path)
+
+        if rptr.ok():
+            logging.debug("%s is OKAY in as much as any of us are really okay..." % path)
         else:
             logging.error("%s FAILED validation" % path)
 
-    # TO DO: MULTIPROCESSING
-
-    if options.single:
+    def process_args(args):
 
         for path in args:
-            do_validate(path)
+            
+            path = os.path.abspath(path)
+            logging.debug("process %s" % path)
 
-        sys.exit()
+            if os.path.isfile(path):
 
-    for source in args:
+                do_validate(path)
 
-        source = os.path.abspath(source)
-        crawl = mapzen.whosonfirst.utils.crawl(source)
+            elif os.path.isdir(path):
 
-        for path in crawl:
-            do_validate(path)
+                crawl = mapzen.whosonfirst.utils.crawl(path)
 
+                if not options.multi:
+
+                    for p in crawl:
+                        do_validate(p)
+                        
+                else:
+
+                    def signal_handler(signal, frame):
+                        sys.exit(0)
+        
+                    signal.signal(signal.SIGINT, signal_handler)
+
+                    processes = multiprocessing.cpu_count() * 2
+                    pool = multiprocessing.Pool(processes=processes)
+            
+                    batch = []
+                    batch_size = 10000
+                    
+                    for path in crawl:
+
+                        batch.append(path)
+
+                        if len(batch) >= batch_size:
+
+                            pool.map(do_validate, batch)
+                            batch = []
+                    
+                    if len(batch):
+                        pool.map(do_validate, batch)
+
+            else:
+                logging.warning("what is %s?" % path)
+
+    process_args(args)
     sys.exit()
