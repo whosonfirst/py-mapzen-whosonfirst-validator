@@ -139,7 +139,7 @@ class validator:
     def validate_file(self, path):
     
         self._path_ = path
-        logging.debug("process %s" % path)
+        logging.debug("process %s" % self._path_)
 
         try:
             fh = open(path, 'r')
@@ -147,7 +147,7 @@ class validator:
         except Exception, e:
 
             r = reporter()
-            r.error("failed to open %s because %s" % (path, e))
+            r.error("failed to open %s because %s" % (self._path_, e))
             return r
 
         return self.validate_feature(feature)
@@ -167,7 +167,7 @@ class validator:
         # (20150831/thisisaaronland)
         
         if isa != 'Feature':
-            r.error("%s has an invalid type: %s" % (path, isa))
+            r.error("%s has an invalid type: %s" % (self._path_, isa))
 
             feature['type'] = 'Feature'
             updated = True
