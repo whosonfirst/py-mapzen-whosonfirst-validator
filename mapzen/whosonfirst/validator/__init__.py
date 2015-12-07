@@ -339,8 +339,8 @@ class validator:
 
         name = props.get("wof:name", "")
         
-        if len(name) == 0:
-            r.warning("%s has a zero-length name" % self._path_)
+        if not name or len(name) == 0:
+            r.warning("%s has a zero-length (or null) name" % self._path_)
             
         # check ISO country
 

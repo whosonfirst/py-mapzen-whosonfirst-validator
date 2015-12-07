@@ -8,7 +8,7 @@ desc = open("README.md").read(),
 setup(
     name='mapzen.whosonfirst.validator',
     namespace_packages=['mapzen', 'mapzen.whosonfirst', 'mapzen.whosonfirst.validator'],
-    version='0.02',
+    version='0.03',
     description='Tools for validating Who\'s On First documents',
     author='Mapzen',
     url='https://github.com/mapzen/py-mapzen-whosonfirst-validator',
@@ -24,5 +24,5 @@ setup(
     scripts=[
         'scripts/wof-validator',
         ],
-    download_url='https://github.com/mapzen/py-mapzen-whosonfirst-validator/releases/tag/v0.02',
+    download_url='https://github.com/mapzen/py-mapzen-whosonfirst-validator/releases/tag/v0.03',
     license='BSD')
