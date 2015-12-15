@@ -8,9 +8,10 @@ import json
 import geojson
 import types
 
-import mapzen.whosonfirst.utils
 import mapzen.whosonfirst.export
 import mapzen.whosonfirst.placetypes
+import mapzen.whosonfirst.sources
+import mapzen.whosonfirst.utils
 
 class reporter:
 
@@ -227,6 +228,9 @@ class validator:
             
             elif k == 'src:geom':
 
+                # Note - this will trigger a warning below
+                # (20151215/thisisaaronland)
+
                 if isa == types.NoneType:
                     props['src:geom'] = "unknown"
                     updated = True
@@ -334,6 +338,13 @@ class validator:
                     pass
         
         # end of try to derive stuff
+
+        # check src:geom
+
+        src = props['src:geom']
+
+        if not mapzen.whosonfirst.source.is_valid_source(src):
+            r.warning("unknown or invalid src:geom")
 
         # check wof:name
 
