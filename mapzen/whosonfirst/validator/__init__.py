@@ -343,7 +343,7 @@ class validator:
 
         src = props['src:geom']
 
-        if not mapzen.whosonfirst.source.is_valid_source(src):
+        if not mapzen.whosonfirst.sources.is_valid_source(src):
             r.warning("unknown or invalid src:geom")
 
         # check wof:name
