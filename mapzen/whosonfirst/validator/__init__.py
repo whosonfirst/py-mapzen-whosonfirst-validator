@@ -116,8 +116,8 @@ class validator:
         }
 
         self._defaults_ = {
-            'edtf:cessation': u"u",
-            'edtf:inception': u"u",
+            'edtf:cessation': u"uuuu",
+            'edtf:inception': u"uuuu",
             'wof:belongsto': [],
             'wof:country': u"",
             'wof:concordances': {},
@@ -252,6 +252,8 @@ class validator:
                     updated = True
                 else:
                     pass
+
+            # see also: https://github.com/whosonfirst/py-mapzen-whosonfirst-validator/issues/2
 
             elif k == 'edtf:inception':
                     
