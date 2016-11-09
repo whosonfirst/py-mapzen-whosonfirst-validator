@@ -26,16 +26,16 @@ setup(
     url='https://github.com/whosonfirst/py-mapzen-whosonfirst-validator',
     install_requires=[
         'mapzen.whosonfirst.export>=0.71',
-        'mapzen.whosonfirst.placetypes>=0.11',
+        'mapzen.whosonfirst.placetypes>=0.21',
         'mapzen.whosonfirst.sources>=0.03',
-        'mapzen.whosonfirst.utils>=0.18',
+        'mapzen.whosonfirst.utils>=0.37',
         'geojson'
         ],
     dependency_links=[
         'https://github.com/whosonfirst/py-mapzen-whosonfirst-export/tarball/master#egg=mapzen.whosonfirst.export-0.71',
-        'https://github.com/whosonfirst/py-mapzen-whosonfirst-placetypes/tarball/master#egg=mapzen.whosonfirst.placetypes-0.11',
+        'https://github.com/whosonfirst/py-mapzen-whosonfirst-placetypes/tarball/master#egg=mapzen.whosonfirst.placetypes-0.21',
         'https://github.com/whosonfirst/py-mapzen-whosonfirst-sources/tarball/master#egg=mapzen.whosonfirst.sources-0.03',
-        'https://github.com/whosonfirst/py-mapzen-whosonfirst-utils/tarball/master#egg=mapzen.whosonfirst.utils-0.18'
+        'https://github.com/whosonfirst/py-mapzen-whosonfirst-utils/tarball/master#egg=mapzen.whosonfirst.utils-0.37'
         ],
     packages=packages,
     scripts=[
