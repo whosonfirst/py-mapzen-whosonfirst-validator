@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+import mapzen.whosonfirst.utils
+import geojson
+import sys
+import os.path
+import logging
+
+try:
+    import osgeo.ogr    
+except Exception, e:
+    logging.error("Failed to load osgeo.ogr package - do you have python-gdal installed?")
+    sys.exit(1)
+
+class validator:
+
+    def __init__(self):
+        self.repair = False
+
+    def validate_directory(self, path):
+
+        crawl = mapzen.whosonfirst.utils.crawl(data, inflate=True)
+        
+        for f in crawl:
+            self.validate_feature(f)
+
+    def validate_file(self, path):
+
+        f = mapzen.whosonfirst.utils.load_file(path)
+        return self.validate_feature(f)
+
+    def validate_feature(self, f):
+
+        poly = osgeo.ogr.CreateGeometryFromJson(geojson.dumps(f['geometry']))
+        valid = poly.IsValid()
+        
+        if not valid:
+            print "%s %s" % (f['properties']['wof:id'], valid)
+            
+            # https://pcjericks.github.io/py-gdalogr-cookbook/geometry.html#calculate-union-between-two-geometries
+            
+            try:
+                union = poly.Union(poly)
+                valid = union.IsValid()
+                print "%s is valid now? %s" % (f['properties']['wof:id'], valid)
+            except Exception, e:
+                print "%s is still not valid because %s" % (f['properties']['wof:id'], e)
+
+if __name__ == "__main__":
+
+    import optparse
+    opt_parser = optparse.OptionParser()
+
+    opt_parser.add_option('-m', '--mode', dest='mode', action='store', default='file', help='...')
+    opt_parser.add_option('-v', '--verbose', dest='verbose', action='store_true', default=False, help='Be chatty (default is false)')
+
+    options, args = opt_parser.parse_args()
+
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    v = validator()
+
+    for path in args:
+
+        if options.mode == "file":
+            v.validate_file(path)
+        elif options.mode == "repo":
+            data = os.path.join(path, "data")
+            v.validate_directory(data)
+        elif options.mode == "directory":
+            v.validate_directory(path)
+        else:
+            logging.error("Invalid mode '%s'" % options.mode)
+            sys.exit(1)
+
+

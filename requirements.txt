@@ -3,3 +3,4 @@ git+git://github.com/whosonfirst/py-mapzen-whosonfirst-export
 git+git://github.com/whosonfirst/py-mapzen-whosonfirst-placetypes
 git+git://github.com/whosonfirst/py-mapzen-whosonfirst-sources
 git+git://github.com/whosonfirst/py-mapzen-whosonfirst-utils
+# gdal

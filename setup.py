@@ -26,7 +26,8 @@ setup(
     url='https://github.com/whosonfirst/py-mapzen-whosonfirst-validator',
     packages=packages,
     scripts=[
-        'scripts/wof-validator',
+        'scripts/wof-validate-properties',
+        'scripts/wof-validate-geometry',
         ],
     download_url='https://github.com/whosonfirst/py-mapzen-whosonfirst-validator/releases/tag/' + version,
     license='BSD')
