@@ -107,5 +107,9 @@ if __name__ == '__main__':
             else:
                 logging.warning("what is %s?" % path)
 
+    if len(args) == 0:
+        logging.error("Nothing to validate!")
+        sys.exit(1)
+
     process_args(args)
     sys.exit()
