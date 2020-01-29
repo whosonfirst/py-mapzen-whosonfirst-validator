@@ -3,7 +3,6 @@ import os.path
 import logging
 import json
 import geojson
-import types
 
 import mapzen.whosonfirst.export
 import mapzen.whosonfirst.placetypes
@@ -39,7 +38,7 @@ class reporter:
         for k, details in report.items():
             fh.write("# %s\n\n" % k)
 
-            if type(details) == types.ListType:
+            if type(details) == list:
 
                 if len(details) > 0:
 
@@ -91,32 +90,32 @@ class validator:
         self._path_ = "feature"
 
         self._required_ = {
-            'wof:id': types.IntType,
-            'wof:parent_id': types.IntType,
-            'wof:name': types.UnicodeType,
-            'wof:placetype': types.UnicodeType,
-            'wof:country': types.UnicodeType,
-            'wof:concordances': types.DictType,
-            'wof:hierarchy': types.ListType,
-            'wof:belongsto': types.ListType,
-            'wof:supersedes': types.ListType,
-            'wof:superseded_by': types.ListType,
-            'wof:breaches': types.ListType,
-            'wof:tags': types.ListType,
-            'iso:country': types.UnicodeType,
-            'src:geom': types.UnicodeType,
-            'edtf:inception': types.UnicodeType,
-            'edtf:cessation': types.UnicodeType,
+            'wof:id': int,
+            'wof:parent_id': int,
+            'wof:name': str,
+            'wof:placetype': str,
+            'wof:country': str,
+            'wof:concordances': dict,
+            'wof:hierarchy': list,
+            'wof:belongsto': list,
+            'wof:supersedes': list,
+            'wof:superseded_by': list,
+            'wof:breaches': list,
+            'wof:tags': list,
+            'iso:country': str,
+            'src:geom': str,
+            'edtf:inception': str,
+            'edtf:cessation': str,
             # 'geom:area': types.FloatType,
             # 'geom:latitude': types.FloatType,
             # 'geom:longitude': types.FloatType,
         }
 
         self._defaults_ = {
-            'edtf:cessation': u"uuuu",
-            'edtf:inception': u"uuuu",
+            'edtf:cessation': "uuuu",
+            'edtf:inception': "uuuu",
             'wof:belongsto': [],
-            'wof:country': u"",
+            'wof:country': "",
             'wof:concordances': {},
             'wof:hierarchy': [],
             'wof:parent_id': -1,
@@ -124,7 +123,7 @@ class validator:
             'wof:supersedes': [],
             'wof:tags': [],
         }
-        
+
     def required_attributes(self):
 
         for k, v in self._required_.items():
@@ -135,14 +134,14 @@ class validator:
         return self._defaults_.get(prop, None)
 
     def validate_file(self, path):
-    
+
         self._path_ = path
         logging.debug("process %s" % self._path_)
 
         try:
             fh = open(path, 'r')
             feature = geojson.load(fh)
-        except Exception, e:
+        except Exception as e:
 
             r = reporter()
             r.error("failed to open %s because %s" % (self._path_, e))
@@ -163,7 +162,7 @@ class validator:
         # hand py-geojson will happily just work. Because everyone is
         # doomed to reimplement XML Schema sooner or later...
         # (20150831/thisisaaronland)
-        
+
         if isa != 'Feature':
             r.error("%s has an invalid type: %s" % (self._path_, isa))
 
@@ -171,17 +170,17 @@ class validator:
             updated = True
 
         props = feature['properties']
-        
+
         # ensure keys
 
         for k, ignore in self.required_attributes():
 
             # r.info("look for %s" % k)
-            
-            if props.has_key(k):
+
+            if k in props:
                 r.debug("%s has key (%s)" % (self._path_, k))
                 continue
-            
+
             r.warning("%s is missing key %s" % (self._path_, k))
 
             default = self.default_value(k)
@@ -190,62 +189,62 @@ class validator:
                 r.debug("assign default value (%s) to %s" % (default, k))
                 props[k] = default
                 updated = True
-            
+
         # ensure expected types (for values)
 
         for k, expected in self.required_attributes():
-        
+
             v = props.get(k, None)
             isa = type(v)
-        
+
             if isa == expected:
                 r.debug("%s has key (%s) with expected value (%s)" % (self._path_, k, isa))
                 continue
-            
+
             r.warning("%s has incorrect value for %s, expected %s but got %s (%s)" % (self._path_, k, expected, isa, v))
 
             if k == 'wof:hierarchy':
-                
-                if isa == types.DictType:
+
+                if isa == dict:
                     props['wof:hierarchy'] = [v]
                     updated = True
-                
+
             elif k == 'wof:parent_id':
-                
-                if isa == types.NoneType:
+
+                if isa == type(None):
                     props['wof:parent_id'] = -1
                     updated = True
-                    
-                elif isa == types.UnicodeType:
+
+                elif isa == str:
                     props['wof:parent_id'] = int(v)
                     updated = True
-                    
+
                 else:
                     pass
-            
+
             elif k == 'src:geom':
 
                 # Note - this will trigger a warning below
                 # (20151215/thisisaaronland)
 
-                if isa == types.NoneType:
+                if isa == type(None):
                     props['src:geom'] = "unknown"
                     updated = True
                 else:
                     pass
 
             elif k == 'iso:country':
-                    
-                if isa == types.StringType:
-                    props['iso:country'] = unicode(v)
+
+                if isa == bytes:
+                    props['iso:country'] = str(v)
                     updated = True
                 else:
                     pass
 
             elif k == 'wof:country':
-                    
-                if isa == types.StringType:
-                    props['wof:country'] = unicode(v)
+
+                if isa == bytes:
+                    props['wof:country'] = str(v)
                     updated = True
                 else:
                     pass
@@ -253,37 +252,37 @@ class validator:
             # see also: https://github.com/whosonfirst/py-mapzen-whosonfirst-validator/issues/2
 
             elif k == 'edtf:inception':
-                    
-                if isa == types.StringType:
-                    props['edtf:inception'] = unicode(v)
+
+                if isa == bytes:
+                    props['edtf:inception'] = str(v)
                     updated = True
                 else:
                     pass
 
             elif k == 'edtf:cessation':
-                    
-                if isa == types.StringType:
-                    props['edtf:cessation'] = unicode(v)
+
+                if isa == bytes:
+                    props['edtf:cessation'] = str(v)
                     updated = True
                 else:
                     pass
 
             else:
                 pass
-            
+
         # try to derive values from existing data or services - not certain this should
         # even stay here... (20150925/thisisaaronland)
 
-        if self.do_derive:            
-        
+        if self.do_derive:
+
             hier = props.get('wof:hierarchy', [])
             count_hiers = len(hier)
 
             if 0 and count_hiers == 0:
-    
+
                 hier = mapzen.whosonfirst.utils.generate_hierarchy(feature)
                 count_hiers = len(hier)
-            
+
                 if count_hiers == 0:
                     r.warning("%s has a zero length hierarchy but unable to figure it out" % self._path_)
                 else:
@@ -299,30 +298,30 @@ class validator:
 
             # TO DO - ensure that are the IDs are ints (and not strings)
             # (20150819/thisisaaronland)
-        
+
             # check parent_id
 
             parent_id = props.get('wof:parent_id', -1)
-        
+
             if parent_id == -1:
-            
+
                 if count_hiers == 1:
-                
+
                     placetype = props['wof:placetype']
                     placetype = mapzen.whosonfirst.placetypes.placetype(placetype)
-                
+
                     new_parent_id = None
-            
+
                     # sudo make me recurse up through ancestors?
-            
+
                     for pt in placetype.parents():
-                
+
                         parent_id_key = "%s_id" % pt
                         new_parent_id = hier[0].get(parent_id_key, None)
-                        
+
                         if new_parent_id:
                             break
-                
+
                         if new_parent_id and new_parent_id != -1:
                             r.info("%s has -1 parent id and setting to %s" % (self._path_, new_parent_id))
                             props['wof:parent_id'] = new_parent_id
@@ -330,12 +329,12 @@ class validator:
 
                         else:
                             r.warning("%s has no parent and a single hierarchy but unable to figure it out..." % self._path_)
-                
+
                 elif count_hiers:
                     r.info("%s has multiple hiers so no easy way to determine parent" % self._path_)
                 else:
                     pass
-        
+
         # end of try to derive stuff
 
         # check src:geom
@@ -348,19 +347,19 @@ class validator:
         # check wof:name
 
         name = props.get("wof:name", "")
-        
+
         if not name or len(name) == 0:
             r.warning("%s has a zero-length (or null) name" % self._path_)
-            
+
         # check ISO country
 
         iso = props.get("iso:country", "")
-        
+
         if len(iso) != 2:
             r.warning("%s has a weird ISO" % self._path_)
 
         if updated:
-            
+
             if self.exporter:
 
                 r.info("%s has changes that will be written to disk" % self._path_)
@@ -368,7 +367,7 @@ class validator:
                 self.exporter.export_feature(feature)
             else:
                 r.debug("%s has changed but no exporter has been defined so updates will not apply" % self._path_)
-    
+
         return r
 
 if __name__ == '__main__':
@@ -383,5 +382,5 @@ if __name__ == '__main__':
         path = os.path.abspath(path)
         rptr = vld.validate_file(path)
 
-        print "%s : %s" % (path, rptr.ok())
-        print rptr.print_report()
+        print("%s : %s" % (path, rptr.ok()))
+        print(rptr.print_report())
