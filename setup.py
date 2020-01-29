@@ -24,9 +24,6 @@ setup(
     description='Tools for validating Who\'s On First documents',
     author='Mapzen',
     url='https://github.com/whosonfirst/py-mapzen-whosonfirst-validator',
-    install_requires=[
-        'geojson',
-    ],
     packages=packages,
     scripts=[
         'scripts/wof-validate-properties',
