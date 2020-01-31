@@ -19,6 +19,7 @@ version = open("VERSION").read()
 
 setup(
     name='mapzen.whosonfirst.validator',
+    python_requires='>3',
     namespace_packages=['mapzen', 'mapzen.whosonfirst'],
     version=version,
     description='Tools for validating Who\'s On First documents',
