@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import mapzen.whosonfirst.utils
-import geojson
 import sys
 import os.path
 import logging
 
 try:
-    import osgeo.ogr    
+    import osgeo.ogr
 except Exception, e:
     logging.error("Failed to load osgeo.ogr package - do you have python-gdal installed?")
     sys.exit(1)
@@ -20,7 +19,7 @@ class validator:
     def validate_directory(self, path):
 
         crawl = mapzen.whosonfirst.utils.crawl(data, inflate=True)
-        
+
         for f in crawl:
             self.validate_feature(f)
 
@@ -31,20 +30,20 @@ class validator:
 
     def validate_feature(self, f):
 
-        poly = osgeo.ogr.CreateGeometryFromJson(geojson.dumps(f['geometry']))
+        poly = osgeo.ogr.CreateGeometryFromJson(.dumps(f['geometry']))
         valid = poly.IsValid()
-        
+
         if not valid:
-            print "%s %s" % (f['properties']['wof:id'], valid)
-            
+            print("%s %s" % (f['properties']['wof:id'], valid))
+
             # https://pcjericks.github.io/py-gdalogr-cookbook/geometry.html#calculate-union-between-two-geometries
-            
+
             try:
                 union = poly.Union(poly)
                 valid = union.IsValid()
-                print "%s is valid now? %s" % (f['properties']['wof:id'], valid)
+                print("%s is valid now? %s" % (f['properties']['wof:id'], valid))
             except Exception, e:
-                print "%s is still not valid because %s" % (f['properties']['wof:id'], e)
+                print("%s is still not valid because %s" % (f['properties']['wof:id'], e))
 
 if __name__ == "__main__":
 
@@ -79,5 +78,3 @@ if __name__ == "__main__":
         else:
             logging.error("Invalid mode '%s'" % options.mode)
             sys.exit(1)
-
-
